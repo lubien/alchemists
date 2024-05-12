@@ -11,6 +11,20 @@ defmodule Fly do
     )
   end
 
+  def start_machine(app_name, machine_id) do
+    Req.post(req_config(),
+      url: "/v1/apps/#{app_name}/machines/#{machine_id}/start",
+      json: %{}
+    )
+  end
+
+  def exec_machine(app_name, machine_id, body) do
+    Req.post(req_config(),
+      url: "/v1/apps/#{app_name}/machines/#{machine_id}/exec",
+      json: body
+    )
+  end
+
   def create_machine(app_name, config) do
     Req.post(req_config(), url: "/v1/apps/#{app_name}/machines", json: config)
   end

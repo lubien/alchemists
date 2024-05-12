@@ -8,6 +8,7 @@ defmodule Alchemist.Recipes.Recipe do
     field :slug, :string
     field :fly_app_name, :string
     field :fly_machine_id, :string
+    field :last_started_at, :utc_datetime_usec
 
     timestamps(type: :utc_datetime)
   end
@@ -15,7 +16,7 @@ defmodule Alchemist.Recipes.Recipe do
   @doc false
   def changeset(recipe, attrs) do
     recipe
-    |> cast(attrs, [:name, :slug, :code, :fly_app_name, :fly_machine_id])
+    |> cast(attrs, [:name, :slug, :code, :fly_app_name, :fly_machine_id, :last_started_at])
     |> validate_required([:name, :slug, :code, :fly_app_name])
     |> unique_constraint(:fly_machine_id)
     |> unique_constraint(:fly_app_name)

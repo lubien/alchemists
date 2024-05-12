@@ -5,6 +5,10 @@
     <.link patch={~p"/recipes/#{@recipe}/show/edit"} phx-click={JS.push_focus()}>
       <.button>Edit recipe</.button>
     </.link>
+
+    <a href={Recipes.link_to_app(@recipe)} target="_blank">
+      <.button>Open recipe</.button>
+    </a>
   </:actions>
 </.header>
 
@@ -18,7 +22,12 @@
 
 <.back navigate={~p"/recipes"}>Back to recipes</.back>
 
-<.modal :if={@live_action == :edit} id="recipe-modal" show on_cancel={JS.patch(~p"/recipes/#{@recipe}")}>
+<.modal
+  :if={@live_action == :edit}
+  id="recipe-modal"
+  show
+  on_cancel={JS.patch(~p"/recipes/#{@recipe}")}
+>
   <.live_component
     module={AlchemistWeb.RecipeLive.FormComponent}
     id={@recipe.id}

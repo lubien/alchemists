@@ -8,7 +8,7 @@ defmodule Alchemist.Recipes do
 
   alias Alchemist.Recipes.Recipe
 
-  @image_ref "registry.fly.io/bugex-silent-cherry-2971:deployment-01HXMTTVP3X05QNZ203CA29TWK"
+  @image_ref "registry.fly.io/bugex-silent-cherry-2971:deployment-01HXP57G3F4CKEWK7ECB118AHW"
 
   @doc """
   Returns the list of recipes.
@@ -76,7 +76,9 @@ defmodule Alchemist.Recipes do
            config = generate_fly_machine_config(recipe.code),
            {:ok, %{status: 200, body: %{"id" => id}}} <-
              Fly.create_machine(recipe.fly_app_name, config) do
-        update_recipe(recipe, %{fly_machine_id: id})
+        recipe
+        |> Recipe.changeset(%{fly_machine_id: id})
+        |> Repo.update()
       end
     end)
     |> case do
@@ -157,6 +159,25 @@ defmodule Alchemist.Recipes do
         {:ok, updated_recipe}
       end
     end)
+    |> case do
+      {:ok, {:ok, _recipe} = result} -> result
+      {:error, {:error, _error} = result} -> result
+    end
+  end
+
+  @doc """
+  Updates a recipe :last_started_at to now.
+
+  ## Examples
+
+      iex> touch_recipe_last_started_at(recipe)
+      {:ok, %Recipe{}}
+
+  """
+  def touch_recipe_last_started_at(%Recipe{} = recipe) do
+    recipe
+    |> Recipe.changeset(%{last_started_at: DateTime.utc_now()})
+    |> Repo.update()
   end
 
   @doc """
@@ -186,5 +207,49 @@ defmodule Alchemist.Recipes do
   """
   def change_recipe(%Recipe{} = recipe, attrs \\ %{}) do
     Recipe.changeset(recipe, attrs)
+  end
+
+  # Health
+
+  def healt_check_recipe(%Recipe{} = recipe) do
+    [
+      &healt_check_recipe_started/1,
+      &healt_check_recipe_reachable/1
+    ]
+    |> Enum.all?(&(&1.(recipe) == :ok))
+  end
+
+  def healt_check_recipe_started(%Recipe{} = recipe) do
+    case Fly.start_machine(recipe.fly_app_name, recipe.fly_machine_id) do
+      {:ok, %{status: 200}} ->
+        :ok
+
+      {:ok, %{status: status}} ->
+        {:error, "Current status is #{status}"}
+    end
+  end
+
+  def healt_check_recipe_reachable(%Recipe{} = recipe) do
+    command = "curl -Is http://localhost:4000/" |> String.split(" ")
+    body = %{command: command, timeout: 10}
+
+    case Fly.exec_machine(recipe.fly_app_name, recipe.fly_machine_id, body) do
+      {:ok, %{status: 200, body: %{"stdout" => ""}}} ->
+        {:error, "Server did not start yet"}
+
+      {:ok, %{status: 200}} ->
+        :ok
+
+      {:ok, %{status: status}} ->
+        {:error, "Current status is #{status}"}
+    end
+  end
+
+  def link_to_app(%Recipe{} = recipe) do
+    if Application.get_env(:alchemist, :dev_routes) do
+      "http://#{recipe.slug}.local:4000"
+    else
+      "https://#{recipe.slug}.alchemists.lubien.dev"
+    end
   end
 end

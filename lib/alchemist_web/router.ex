@@ -17,7 +17,8 @@ defmodule AlchemistWeb.Router do
   scope "/", AlchemistWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    # get "/", PageController, :home
+    live "/", PageLive, :home
 
     live "/recipes", RecipeLive.Index, :index
     live "/recipes/new", RecipeLive.Index, :new
