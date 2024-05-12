@@ -16,7 +16,7 @@ defmodule Alchemist.Recipes.Recipe do
   def changeset(recipe, attrs) do
     recipe
     |> cast(attrs, [:name, :slug, :code, :fly_app_name, :fly_machine_id])
-    |> validate_required([:name, :slug, :code, :fly_app_name, :fly_machine_id])
+    |> validate_required([:name, :slug, :code, :fly_app_name])
     |> unique_constraint(:fly_machine_id)
     |> unique_constraint(:fly_app_name)
   end

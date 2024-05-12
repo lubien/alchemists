@@ -8,6 +8,8 @@ defmodule Alchemist.Recipes do
 
   alias Alchemist.Recipes.Recipe
 
+  @image_ref "registry.fly.io/bugex-silent-cherry-2971:deployment-01HXMTTVP3X05QNZ203CA29TWK"
+
   @doc """
   Returns the list of recipes.
 
@@ -50,9 +52,70 @@ defmodule Alchemist.Recipes do
 
   """
   def create_recipe(attrs \\ %{}) do
-    %Recipe{}
-    |> Recipe.changeset(attrs)
-    |> Repo.insert()
+    Repo.transaction(fn ->
+      changeset = Recipe.changeset(%Recipe{}, attrs)
+
+      with {:ok, recipe} <- Repo.insert(changeset),
+           {:ok, %{status: 201}} <- Fly.create_app(recipe.fly_app_name),
+           config = generate_fly_machine_config(recipe.code),
+           {:ok, %{status: 200, body: %{"id" => id}}} <-
+             Fly.create_machine(recipe.fly_app_name, config) do
+        update_recipe(recipe, %{fly_machine_id: id})
+      end
+    end)
+    |> case do
+      {:ok, {:ok, _recipe} = result} -> result
+      {:error, {:error, _error} = result} -> result
+    end
+  end
+
+  defp generate_fly_machine_config(code) do
+    %{
+      "config" => %{
+        "env" => %{
+          "FLY_PROCESS_GROUP" => "app",
+          "PRIMARY_REGION" => "gru",
+          "CODE" => code
+        },
+        "init" => %{},
+        "guest" => %{
+          "cpu_kind" => "shared",
+          "cpus" => 1,
+          "memory_mb" => 1024
+        },
+        "image" => @image_ref,
+        "metadata" => %{
+          "fly_flyctl_version" => "0.2.50",
+          "fly_platform_version" => "v2",
+          "fly_process_group" => "app",
+          "fly_release_id" => "e03j7MNppPA38TQYwzje4G139",
+          "fly_release_version" => "2"
+        },
+        "services" => [
+          %{
+            "autostart" => true,
+            "autostop" => true,
+            "force_instance_key" => nil,
+            "internal_port" => 4000,
+            "min_machines_running" => 0,
+            "ports" => [
+              %{
+                "force_https" => true,
+                "handlers" => ["http"],
+                "port" => 80
+              },
+              %{
+                "handlers" => ["http", "tls"],
+                "port" => 443
+              }
+            ],
+            "protocol" => "tcp"
+          }
+        ]
+      },
+      "lease_ttl" => 300,
+      "region" => "gru"
+    }
   end
 
   @doc """
@@ -68,9 +131,16 @@ defmodule Alchemist.Recipes do
 
   """
   def update_recipe(%Recipe{} = recipe, attrs) do
-    recipe
-    |> Recipe.changeset(attrs)
-    |> Repo.update()
+    Repo.transaction(fn ->
+      changeset = Recipe.changeset(recipe, attrs)
+
+      with {:ok, updated_recipe} <- Repo.update(changeset),
+           config = generate_fly_machine_config(recipe.code),
+           {:ok, %{status: 200}} <-
+             Fly.update_machine(recipe.fly_app_name, recipe.fly_machine_id, config) do
+        {:ok, updated_recipe}
+      end
+    end)
   end
 
   @doc """
