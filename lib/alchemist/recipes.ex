@@ -40,6 +40,22 @@ defmodule Alchemist.Recipes do
   def get_recipe!(id), do: Repo.get!(Recipe, id)
 
   @doc """
+  Gets a single recipe.
+
+  Raises `Ecto.NoResultsError` if the Recipe does not exist.
+
+  ## Examples
+
+      iex> get_recipe_by!(slug: "exist")
+      %Recipe{}
+
+      iex> get_recipe_by!(slug: "not-exist")
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_recipe_by!(clauses), do: Repo.get_by!(Recipe, clauses)
+
+  @doc """
   Creates a recipe.
 
   ## Examples
