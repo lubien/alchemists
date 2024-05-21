@@ -70,11 +70,12 @@ defmodule Alchemist.Recipes do
   def create_recipe(attrs \\ %{}) do
     Repo.transaction(fn ->
       uuid = Ecto.UUID.generate()
+      network_name = "network-#{uuid}"
       managed_attrs = %{fly_app_name: "user-code-#{uuid}"}
       changeset = Recipe.changeset(%Recipe{}, attrs, managed_attrs)
 
       with {:ok, recipe} <- Repo.insert(changeset),
-           {:ok, %{status: 201}} <- Fly.create_app(recipe.fly_app_name),
+           {:ok, %{status: 201}} <- Fly.create_app(recipe.fly_app_name, network_name),
            config = generate_fly_machine_config(recipe.code),
            {:ok, %{status: 200, body: %{"id" => id}}} <-
              Fly.create_machine(recipe.fly_app_name, config) do
