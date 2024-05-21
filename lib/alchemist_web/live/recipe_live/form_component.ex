@@ -20,10 +20,7 @@ defmodule AlchemistWeb.RecipeLive.FormComponent do
         phx-submit="save"
       >
         <.input field={@form[:name]} type="text" label="Name" />
-        <.input field={@form[:slug]} type="text" label="Slug" />
         <.input field={@form[:code]} type="textarea" label="Code" />
-        <.input field={@form[:fly_app_name]} type="text" label="Fly app name" />
-        <.input field={@form[:fly_machine_id]} type="text" label="Fly machine" />
         <:actions>
           <.button phx-disable-with="Saving...">Save Recipe</.button>
         </:actions>

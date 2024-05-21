@@ -69,7 +69,9 @@ defmodule Alchemist.Recipes do
   """
   def create_recipe(attrs \\ %{}) do
     Repo.transaction(fn ->
-      changeset = Recipe.changeset(%Recipe{}, attrs)
+      uuid = Ecto.UUID.generate()
+      managed_attrs = %{fly_app_name: "user-code-#{uuid}"}
+      changeset = Recipe.changeset(%Recipe{}, attrs, managed_attrs)
 
       with {:ok, recipe} <- Repo.insert(changeset),
            {:ok, %{status: 201}} <- Fly.create_app(recipe.fly_app_name),
@@ -207,7 +209,7 @@ defmodule Alchemist.Recipes do
 
   """
   def change_recipe(%Recipe{} = recipe, attrs \\ %{}) do
-    Recipe.changeset(recipe, attrs)
+    Recipe.form_changeset(recipe, attrs)
   end
 
   # Health

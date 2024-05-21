@@ -58,6 +58,7 @@ defmodule Alchemist.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:req, "~> 0.4.0"},
+      {:slugify, "~> 1.3"},
       {:bandit, "~> 1.2"}
     ]
   end
