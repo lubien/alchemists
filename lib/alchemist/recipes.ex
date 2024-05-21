@@ -83,6 +83,7 @@ defmodule Alchemist.Recipes do
     end)
     |> case do
       {:ok, {:ok, _recipe} = result} -> result
+      {:ok, {:error, _error} = result} -> result
       {:error, {:error, _error} = result} -> result
     end
   end
