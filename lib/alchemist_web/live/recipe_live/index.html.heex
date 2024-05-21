@@ -14,7 +14,6 @@
 >
   <:col :let={{_id, recipe}} label="Name"><%= recipe.name %></:col>
   <:col :let={{_id, recipe}} label="Slug"><%= recipe.slug %></:col>
-  <:col :let={{_id, recipe}} label="Code"><%= recipe.code %></:col>
   <:col :let={{_id, recipe}} label="Fly app name"><%= recipe.fly_app_name %></:col>
   <:col :let={{_id, recipe}} label="Fly machine"><%= recipe.fly_machine_id %></:col>
   <:action :let={{_id, recipe}}>
@@ -33,7 +32,12 @@
   </:action>
 </.table>
 
-<.modal :if={@live_action in [:new, :edit]} id="recipe-modal" show on_cancel={JS.patch(~p"/recipes")}>
+<.modal
+  :if={@live_action in [:new, :edit]}
+  id="recipe-modal"
+  show
+  on_cancel={JS.patch(~p"/recipes")}
+>
   <.live_component
     module={AlchemistWeb.RecipeLive.FormComponent}
     id={@recipe.id || :new}
