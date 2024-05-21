@@ -1,7 +1,7 @@
 defmodule Fly do
   @org_slug "onlyferas"
 
-  def create_app(org_slug \\ @org_slug, app_name, network \\ "") do
+  def create_app(org_slug \\ @org_slug, app_name, network) do
     Req.post(req_config(),
       url: "/v1/apps",
       json: %{
